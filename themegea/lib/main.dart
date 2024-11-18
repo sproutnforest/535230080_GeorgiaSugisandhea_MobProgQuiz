@@ -1,241 +1,242 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeManager(),
+      child: MyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  int currentTheme = 1;
-  int currentFont = 1;
-
-  Color modeonebutton = Color(0xFFD19C1D);
-  Color modeonebar = Color(0xFF472C1B);
-  Color modeoneback = Color(0xFF1B512D);
-
-  Color modetwobutton = Color(0xFFF2DC5D);
-  Color modetwobar = Color(0xFFA76D60);
-  Color modetwoback = Color(0xFF566246);
-
-  Color modethreebutton = Color(0xFFFF8966);
-  Color modethreebar = Color(0xFF6B0F1A);
-  Color modethreeback = Color(0xFF31081F);
-
-  void themeone() {
-    setState(() {
-      currentTheme = 1;
-    });
-  }
-
-  void themetwo() {
-    setState(() {
-      currentTheme = 2;
-    });
-  }
-
-  void themethree() {
-    setState(() {
-      currentTheme = 3;
-    });
-  }
-
-  void fontone() {
-    setState(() {
-      currentFont = 1;
-    });
-  }
-
-  void fonttwo() {
-    setState(() {
-      currentFont = 2;
-    });
-  }
-
-  void fontthree() {
-    setState(() {
-      currentFont = 3;
-    });
-  }
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    Color barColor;
-    Color backgroundColor;
-    Color buttonColor;
-    TextStyle textFont;
-
-    if (currentTheme == 1) {
-      buttonColor = modeonebutton;
-      barColor = modeonebar;
-      backgroundColor = modeoneback;
-    } else if (currentTheme == 2) {
-      buttonColor = modetwobutton;
-      barColor = modetwobar;
-      backgroundColor = modetwoback;
-    } else {
-      buttonColor = modethreebutton;
-      barColor = modethreebar;
-      backgroundColor = modethreeback;
-    }
-
-    if (currentFont == 1) {
-      textFont = GoogleFonts.lato();
-    } else if (currentFont == 2) {
-      textFont = GoogleFonts.cinzel();
-    } else {
-      textFont = GoogleFonts.poppins();
-    }
-
+    final themeManager = Provider.of<ThemeManager>(context);
     return MaterialApp(
       theme: ThemeData(
-        primaryColor: barColor,
-        scaffoldBackgroundColor: backgroundColor,
+        primaryColor: themeManager.getBarColor,
+        scaffoldBackgroundColor: themeManager.getBackgroundColor,
         appBarTheme: AppBarTheme(
-            color: barColor,
-            titleTextStyle:
-                TextStyle(color: Color.fromARGB(255, 255, 255, 255))),
-      ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Custom your own page!',
-            style: textFont.copyWith(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+          color: themeManager.getBarColor,
+          titleTextStyle: themeManager.getTextStyle.copyWith(
+            color: Colors.white,
+            fontSize: 20,
           ),
         ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Pick your color theme: ',
-                style: textFont.copyWith(
-                  color: Colors.white, // Change font color
-                  fontSize: 24, // Set font size
-                  fontWeight: FontWeight.bold, // Set font weight
+        textTheme: TextTheme(
+          bodyMedium: themeManager.getTextStyle,
+        ),
+      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => MainPage(),
+        '/settings': (context) => SettingsPage(),
+      },
+    );
+  }
+}
+
+class ThemeManager extends ChangeNotifier {
+  int _currentTheme = 1;
+  int _currentFont = 1;
+
+  // Theme configurations
+  final Map<int, Color> _buttonColors = {
+    1: Color(0xFFD19C1D),
+    2: Color(0xFFF2DC5D),
+    3: Color(0xFFFF8966),
+  };
+
+  final Map<int, Color> _barColors = {
+    1: Color(0xFF472C1B),
+    2: Color(0xFFA76D60),
+    3: Color(0xFF6B0F1A),
+  };
+
+  final Map<int, Color> _backgroundColors = {
+    1: Color(0xFF1B512D),
+    2: Color(0xFF566246),
+    3: Color(0xFF31081F),
+  };
+
+  // Font configurations
+  final Map<int, TextStyle> _fontStyles = {
+    1: GoogleFonts.lato(),
+    2: GoogleFonts.roboto(),
+    3: GoogleFonts.poppins(),
+  };
+
+  // Getters
+  Color get getButtonColor => _buttonColors[_currentTheme]!;
+  Color get getBarColor => _barColors[_currentTheme]!;
+  Color get getBackgroundColor => _backgroundColors[_currentTheme]!;
+  TextStyle get getTextStyle => _fontStyles[_currentFont]!;
+
+  // Setters
+  void setTheme(int theme) {
+    _currentTheme = theme;
+    notifyListeners();
+  }
+
+  void setFont(int font) {
+    _currentFont = font;
+    notifyListeners();
+  }
+}
+
+class MainPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final themeManager = Provider.of<ThemeManager>(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Home Page'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Welcome to the homepage!',
+              style: themeManager.getTextStyle.copyWith(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeManager.getButtonColor,
+              ),
+              child: Text(
+                'Go to Settings',
+                style: themeManager.getTextStyle.copyWith(
+                  color: Colors.white,
                 ),
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(buttonColor),
-                  foregroundColor: WidgetStateProperty.all(
-                      const Color.fromARGB(255, 3, 3, 3)), // Text color
-                ),
-                onPressed: themeone,
-                child: Text(
-                  'Vintage Theme',
-                  style: textFont.copyWith(
-                    color: Colors.white, // Change font color
-                    fontSize: 24, // Set font size
-                    fontWeight: FontWeight.bold, // Set font weight
-                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SettingsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final themeManager = Provider.of<ThemeManager>(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Settings Page'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Pick your color theme:',
+              style: themeManager.getTextStyle.copyWith(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => themeManager.setTheme(1),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeManager.getButtonColor,
+              ),
+              child: Text(
+                'Vintage Theme',
+                style: themeManager.getTextStyle.copyWith(
+                  color: Colors.white,
                 ),
               ),
-              SizedBox(height: 10), // Add space between buttons
-              ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(buttonColor),
-                  foregroundColor: WidgetStateProperty.all(
-                      const Color.fromARGB(255, 3, 3, 3)), // Text color
-                ),
-                onPressed: themetwo,
-                child: Text(
-                  'Salmon Sushi Theme',
-                  style: textFont.copyWith(
-                    color: Colors.white, // Change font color
-                    fontSize: 24, // Set font size
-                    fontWeight: FontWeight.bold, // Set font weight
-                  ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => themeManager.setTheme(2),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeManager.getButtonColor,
+              ),
+              child: Text(
+                'Salmon Sushi Theme',
+                style: themeManager.getTextStyle.copyWith(
+                  color: Colors.white,
                 ),
               ),
-              SizedBox(height: 10), // Add space between buttons
-              ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(buttonColor),
-                  foregroundColor: WidgetStateProperty.all(
-                      const Color.fromARGB(255, 3, 3, 3)), // Text color
-                ),
-                onPressed: themethree,
-                child: Text(
-                  'Choco n Wine Theme',
-                  style: textFont.copyWith(
-                    color: Colors.white, // Change font color
-                    fontSize: 24, // Set font size
-                    fontWeight: FontWeight.bold, // Set font weight
-                  ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => themeManager.setTheme(3),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeManager.getButtonColor,
+              ),
+              child: Text(
+                'Choco n Wine Theme',
+                style: themeManager.getTextStyle.copyWith(
+                  color: Colors.white,
                 ),
               ),
-              SizedBox(height: 40),
-              Text(
-                'Pick your font: ',
-                style: textFont.copyWith(
-                  color: Colors.white, // Change font color
-                  fontSize: 24, // Set font size
-                  fontWeight: FontWeight.bold, // Set font weight
+            ),
+            SizedBox(height: 40),
+            Text(
+              'Pick your font:',
+              style: themeManager.getTextStyle.copyWith(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => themeManager.setFont(1),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeManager.getButtonColor,
+              ),
+              child: Text(
+                'Lato',
+                style: themeManager.getTextStyle.copyWith(
+                  color: Colors.white,
                 ),
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(buttonColor),
-                  foregroundColor: WidgetStateProperty.all(
-                      const Color.fromARGB(255, 3, 3, 3)), // Text color
-                ),
-                onPressed: fontone,
-                child: Text(
-                  'Lato',
-                  style: textFont.copyWith(
-                    color: Colors.white, // Change font color
-                    fontSize: 24, // Set font size
-                    fontWeight: FontWeight.bold, // Set font weight
-                  ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => themeManager.setFont(2),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeManager.getButtonColor,
+              ),
+              child: Text(
+                'Roboto',
+                style: themeManager.getTextStyle.copyWith(
+                  color: Colors.white,
                 ),
               ),
-              SizedBox(height: 10), // Add space between buttons
-              ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(buttonColor),
-                  foregroundColor: WidgetStateProperty.all(
-                      const Color.fromARGB(255, 3, 3, 3)), // Text color
-                ),
-                onPressed: fonttwo,
-                child: Text(
-                  'Cinzel',
-                  style: textFont.copyWith(
-                    color: Colors.white, // Change font color
-                    fontSize: 24, // Set font size
-                    fontWeight: FontWeight.bold, // Set font weight
-                  ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => themeManager.setFont(3),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeManager.getButtonColor,
+              ),
+              child: Text(
+                'Poppins',
+                style: themeManager.getTextStyle.copyWith(
+                  color: Colors.white,
                 ),
               ),
-              SizedBox(height: 10), // Add space between buttons
-              ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(buttonColor),
-                  foregroundColor: WidgetStateProperty.all(
-                      const Color.fromARGB(255, 3, 3, 3)), // Text color
-                ),
-                onPressed: fontthree,
-                child: Text(
-                  'Poppins',
-                  style: textFont.copyWith(
-                    color: Colors.white, // Change font color
-                    fontSize: 24, // Set font size
-                    fontWeight: FontWeight.bold, // Set font weight
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
